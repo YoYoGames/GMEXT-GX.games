@@ -1,0 +1,2 @@
+
+text = "GXC API Library"
