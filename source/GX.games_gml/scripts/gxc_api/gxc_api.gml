@@ -6,27 +6,27 @@ function gxc_api() {}
 
 /// @function gxc_get_query_param(key)
 /// @description Returns the parameter value corresponding to the given key.
-/// @param {string} key The parameter string key
-/// @returns {string/undefined} The string value of the parameter or undefined if not found.
+/// @param {String} key The parameter string key
+/// @returns {String|Undefined} The string value of the parameter or undefined if not found.
 /// @notes Parameters will only be available during remote playing or if passed
 ///		through the browser's URL manually. In order to understand how this works use
 ///		the provided guide link, mainly the section on "Testing Challenges Locally":
 /// 
 ///		https://help.yoyogames.com/hc/en-us/articles/4408214631697
 ///
-function gxc_get_query_param(key) {
+function gxc_get_query_param(_key) {
 	
 	// Cached parameters static variable.
 	static _cachedParams = undefined;
 
 	// Auxiliar function to split key-value pairs.
-	static keyValueSplit = function(str, ch) {
+	static keyValueSplit = function(_str, _ch) {
 	
-		var idx = string_pos(ch, str);
+		var _idx = string_pos(_ch, _str);
   
-		if (idx = 0) return [str, true];
+		if (_idx = 0) return [_str, true];
 	
-		return [string_copy(str, 1, idx - 1), string_copy(str, idx + 1, string_length(str) - 1)];
+		return [string_copy(_str, 1, _idx - 1), string_copy(_str, _idx + 1, string_length(_str) - 1)];
 	}
 
 	// If cached parameters is 'undefined' populate it.
@@ -41,13 +41,13 @@ function gxc_get_query_param(key) {
 		}
 	}
 	
-	return _cachedParams[$ key];
+	return _cachedParams[$ _key];
 }
 
 /// @function gxc_profile_get_info(callback)
 /// @description Queries for the current player profile information.
-/// @param {method} callback The function to be called upon task completion.
-/// @returns {integer} The http request unique identifier.
+/// @param {Function} callback The function to be called upon task completion.
+/// @returns {Real} The http request unique identifier.
 function gxc_profile_get_info(_callback = undefined) {
 
 	// Parameter validation
@@ -104,10 +104,10 @@ function gxc_challenge_get_challenges(_callback = undefined, _options = undefine
 
 /// @function gxc_challenge_submit_score(score, callback, options)
 /// @description Submits a new challenge score.
-/// @param {real} score The new score to be submitted.
-/// @param {method} callback The function to be called upon task completion.
-/// @param {struct} options This struct can contain the challenge (challengeId) to submit to.
-/// @returns {integer} The http request unique identifier.
+/// @param {Real} score The new score to be submitted.
+/// @param {Function} callback The function to be called upon task completion.
+/// @param {Struct} options This struct can contain the challenge (challengeId) to submit to.
+/// @returns {Real} The http request unique identifier.
 function gxc_challenge_submit_score(_score, _callback = undefined, _options = undefined) {
 
 	static _defaultOptions = {
@@ -154,8 +154,8 @@ function gxc_challenge_submit_score(_score, _callback = undefined, _options = un
 
 /// @function gxc_challenge_get_global_scores(callback, options)
 /// @description Get current challenge top scores.
-/// @param {method} callback The function to be called upon task completion.
-/// @param {struct} options This struct can contain pagination (page, pageSize), track (trackId) and challenge (challengeId) values.
+/// @param {Function} callback The function to be called upon task completion.
+/// @param {Struct} options This struct can contain pagination (page, pageSize), track (trackId) and challenge (challengeId) values.
 function gxc_challenge_get_global_scores(_callback = undefined, _options = undefined) {
 	
 	static _defaultOptions = {
@@ -194,9 +194,9 @@ function gxc_challenge_get_global_scores(_callback = undefined, _options = undef
 
 /// @function gxc_challenge_get_user_scores(callback, options)
 /// @description Get signed in user's challenge scores
-/// @param {method} callback The function to be called upon task completion.
-/// @param {struct} options This struct can contain pagination (page, pageSize), track (trackId) and challenge (challengeId) values.
-/// @returns {integer} The http request unique identifier.
+/// @param {Function} callback The function to be called upon task completion.
+/// @param {Struct} options This struct can contain pagination (page, pageSize), track (trackId) and challenge (challengeId) values.
+/// @returns {Real} The http request unique identifier.
 function gxc_challenge_get_user_scores(_callback = undefined, _options = undefined) {
 	
 	static _defaultOptions = {
@@ -260,8 +260,8 @@ function gxc_challenge_get_user_scores(_callback = undefined, _options = undefin
 
 /// @function gxc_get_profile(callback)
 /// @description Queries for the current player profile information.
-/// @param {method} callback The function to be called upon task completion.
-/// @returns {integer} The http request unique identifier.
+/// @param {Function} callback The function to be called upon task completion.
+/// @returns {Real} The http request unique identifier.
 /// @notes This method is being DEPRECATED (avoid using it)
 function gxc_get_profile(_callback = undefined) {
 	show_debug_message("[WARNING] gxc_get_profile, function is deprecated and will be removed in the future; use 'gxc_profile_get_info' instead.");
@@ -270,9 +270,9 @@ function gxc_get_profile(_callback = undefined) {
 
 /// @function gxc_submit_challenge_score(score, callback)
 /// @description Submits a new challenge score.
-/// @param {real} score The new score to be submitted.
-/// @param {method} callback The function to be called upon task completion.
-/// @returns {integer} The http request unique identifier.
+/// @param {Real} score The new score to be submitted.
+/// @param {Function} callback The function to be called upon task completion.
+/// @returns {Real} The http request unique identifier.
 /// @notes This method is being DEPRECATED (avoid using it)
 function gxc_submit_challenge_score(_score, _callback = undefined) {
 	show_debug_message("[WARNING] gxc_submit_challenge_score, function is deprecated and will be removed in the future; use 'gxc_challenge_submit_score' instead.");
@@ -381,7 +381,9 @@ function __gxc_event_asyncListener(_payload) {
 	var _result = _payload[? "result"];
 	if (_result != "") {
 		_result = json_parse(_result);
-		structToMap(_result, _asyncMap);
+		if (is_struct(_result)) {
+			structToMap(_result, _asyncMap);
+		}
 	}
 	
 	event_perform_async(ev_async_social, _asyncMap);
