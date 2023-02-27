@@ -1,4 +1,6 @@
 
+// feather ignore GM2017
+
 // Lock file execution
 function gxc_api() {}
 
@@ -7,7 +9,7 @@ function gxc_api() {}
 /// @function gxc_get_query_param(key)
 /// @description Returns the parameter value corresponding to the given key.
 /// @param {String} key The parameter string key
-/// @returns {String|Undefined} The string value of the parameter or undefined if not found.
+/// @returns {String} The string value of the parameter or undefined if not found.
 /// @notes Parameters will only be available during remote playing or if passed
 ///		through the browser's URL manually. In order to understand how this works use
 ///		the provided guide link, mainly the section on "Testing Challenges Locally":
@@ -17,7 +19,7 @@ function gxc_api() {}
 function gxc_get_query_param(_key) {
 	
 	// Cached parameters static variable.
-	static _cachedParams = undefined;
+	static cachedParams = undefined;
 
 	// Auxiliar function to split key-value pairs.
 	static keyValueSplit = function(_str, _ch) {
@@ -30,18 +32,18 @@ function gxc_get_query_param(_key) {
 	}
 
 	// If cached parameters is 'undefined' populate it.
-	if (is_undefined(_cachedParams)) {
-		_cachedParams = {};
+	if (is_undefined(cachedParams)) {
+		cachedParams = {};
 		for (var i = 0; i < parameter_count(); ++i) {
 			
 			var _parameterStr = parameter_string(i);
 			var _keyValuePair = keyValueSplit(_parameterStr, "=");
 			
-			_cachedParams[$ _keyValuePair[0]] = _keyValuePair[1];
+			cachedParams[$ _keyValuePair[0]] = _keyValuePair[1];
 		}
 	}
 	
-	return _cachedParams[$ _key];
+	return cachedParams[$ _key];
 }
 
 /// @function gxc_profile_get_info(callback)
@@ -50,24 +52,23 @@ function gxc_get_query_param(_key) {
 /// @returns {Real} The http request unique identifier.
 function gxc_profile_get_info(_callback = undefined) {
 
-	// Parameter validation
-	if (!is_undefined(_callback) && !is_method(_callback)) {
-		throw "[ERROR] gxc_profile_get_info, param 'callback' must be of type method."
-	}
+	// Validate input paramenters
+	if (!is_undefined(_callback) && !is_method(_callback)) { show_message("[ERROR] gxc_profile_get_info, param 'callback' must be of type method."); return -1; }
 
 	var _listener = _callback ? __gxc_callback_asyncListener : __gxc_event_asyncListener;
 	
 	// This is the profile URL
-	var _url = "https://api.gxc.gg/gg/profile";
+	var _domain = __gxc_get_domain();
+	var _url = _domain + "/gg/profile";
 	
 	return __gxc_http_request(_url, "GET", _listener, _callback);
 }
 
 /// @function gxc_challenge_get_challenges(callback, options)
 /// @description Get list current game's challenges.
-/// @param {function} callback The function to be called upon task completion.
-/// @param {struct} options This struct can contain pagination (page, pageSize) and track (trackId) values.
-/// @returns {real} The http request unique identifier.
+/// @param {Function} callback The function to be called upon task completion.
+/// @param {Struct} options This struct can contain pagination (page, pageSize) and track (trackId) values.
+/// @returns {Real} The http request unique identifier.
 function gxc_challenge_get_challenges(_callback = undefined, _options = undefined) {
 	
 	static _defaultOptions = {
@@ -78,8 +79,10 @@ function gxc_challenge_get_challenges(_callback = undefined, _options = undefine
 	
 	// Validate input paramenters
 	if (!is_undefined(_callback) && !is_method(_callback)) {
-		throw "[ERROR] gxc_challenge_get_challenges, param 'callback' must be of type method."
+		show_message("[ERROR] gxc_challenge_get_challenges, param 'callback' must be of type method.");
+		return -1;
 	}
+	
 	// Check if callback should be user instead of event
 	var _listener = !is_undefined(_callback) ? __gxc_callback_asyncListener : __gxc_event_asyncListener;
 
@@ -91,12 +94,12 @@ function gxc_challenge_get_challenges(_callback = undefined, _options = undefine
 	var _track = _options.trackId;
 	
 	// Make sure the required query params are all available
-	if (is_undefined(_game) || is_undefined(_track)) {
-		throw "[ERROR] gxc_challenge_get_challenges, required query params not found."
-	}
+	if (is_undefined(_game)) { show_message("[ERROR] gxc_challenge_get_challenges, required query params 'game' not found."); return -1; }
+	if (is_undefined(_track)) { show_message("[ERROR] gxc_challenge_get_challenges, required query params 'track' not found (use 'options.trackId' to provide one)."); return -1; }
 
 	// This is the query URL
-	var _url = "https://api.gxc.gg/gg/games/" + _game + "/challenges";
+	var _domain = __gxc_get_domain();
+	var _url = _domain + "/gg/games/" + _game + "/challenges";
 	_url += __gxc_struct_to_params(_options, ["page", "pageSize", "trackId"]);
 
 	return __gxc_http_request(_url, "GET", _listener, _callback);
@@ -111,13 +114,13 @@ function gxc_challenge_get_challenges(_callback = undefined, _options = undefine
 function gxc_challenge_submit_score(_score, _callback = undefined, _options = undefined) {
 
 	static _defaultOptions = {
-		challengeId: gxc_get_query_param("challenge")
+		challengeId: gxc_get_query_param("challenge"),
+		trackId: gxc_get_query_param("track")
 	}
 
 	// Validate input paramenters
-	if (!is_undefined(_callback) && !is_method(_callback)) {
-		throw "[ERROR] gxc_challenge_submit_score, param 'callback' must be of type method."
-	}
+	if (!is_undefined(_callback) && !is_method(_callback)) { show_message("[ERROR] gxc_challenge_submit_score, param 'callback' must be of type method."); return -1; }
+	
 	// Check if callback should be user instead of event
 	var _listener = !is_undefined(_callback) ? __gxc_callback_asyncListener : __gxc_event_asyncListener;
 
@@ -129,19 +132,20 @@ function gxc_challenge_submit_score(_score, _callback = undefined, _options = un
 	
 	// Get required query parameters.
 	var _game =  gxc_get_query_param("game");
-	var _track = gxc_get_query_param("track");
 	var _challenge = _options.challengeId;
+	var _track = _options._trackId;
 	
 	// Make sure the required query params are all available
-	if (is_undefined(_challenge) || is_undefined(_track) || is_undefined(_game)) {
-		throw "[ERROR] gxc_challenge_submit_score, required query params not found."
-	}
+	if (is_undefined(_game)) { show_message("[ERROR] gxc_challenge_submit_score, required query params 'game' not found."); return -1; }
+	if (is_undefined(_track)) { show_message("[ERROR] gxc_challenge_submit_score, required query params 'track' not found (use 'options.trackId' to provide one)."); return -1; }
+	if (is_undefined(_challenge)) { show_message("[ERROR] gxc_challenge_submit_score, required query params 'challenge' not found (use 'options.challengeId' to provide one)."); return -1 }
 
 	// Create SHA1 hash 
 	var _hash = sha1_string_utf8(_game + _challenge + _track + string(_score));
 
 	// Check API version configuration (v2 vs legacy)
-	var _base = GXC_SUBMIT_SCORE_V2 ? "https://api.gxc.gg/gg/v2" : "https://api.gxc.gg/gg";
+	var _domain = __gxc_get_domain();
+	var _base = _domain + (GXC_SUBMIT_SCORE_V2 ? "/gg/v2" : "/gg");
 
 	// This is the challenge URL
 	var _url = _base + "/games/" + _game + "/challenges/" + _challenge + "/scores";
@@ -156,6 +160,7 @@ function gxc_challenge_submit_score(_score, _callback = undefined, _options = un
 /// @description Get current challenge top scores.
 /// @param {Function} callback The function to be called upon task completion.
 /// @param {Struct} options This struct can contain pagination (page, pageSize), track (trackId) and challenge (challengeId) values.
+/// @returns {Real} The http request unique identifier.
 function gxc_challenge_get_global_scores(_callback = undefined, _options = undefined) {
 	
 	static _defaultOptions = {
@@ -166,9 +171,8 @@ function gxc_challenge_get_global_scores(_callback = undefined, _options = undef
 	}
 	
 	// Validate input paramenters
-	if (!is_undefined(_callback) && !is_method(_callback)) {
-		throw "[ERROR] gxc_challenge_get_global_scores, param 'callback' must be of type method."
-	}
+	if (!is_undefined(_callback) && !is_method(_callback)) { show_message("[ERROR] gxc_challenge_get_global_scores, param 'callback' must be of type method."); return -1; }
+	
 	// Check if callback should be user instead of event
 	var _listener = !is_undefined(_callback) ? __gxc_callback_asyncListener : __gxc_event_asyncListener;
 
@@ -177,16 +181,17 @@ function gxc_challenge_get_global_scores(_callback = undefined, _options = undef
 
 	// Get required query parameters.
 	var _game = gxc_get_query_param("game");
-	var _trackId = _options.trackId;
+	var _track = _options.trackId;
 	var _challenge = _options.challengeId;
 	
 	// Make sure the required query params are all available
-	if (is_undefined(_game) || is_undefined(_trackId) || is_undefined(_challenge)) {
-		throw "[ERROR] gxc_challenge_get_global_scores, required query params not found."
-	}
+	if (is_undefined(_game)) { show_message("[ERROR] gxc_challenge_get_global_scores, required query params 'game' not found."); return -1; }
+	if (is_undefined(_track)) { show_message("[ERROR] gxc_challenge_get_global_scores, required query params 'track' not found (use 'options.trackId' to provide one)."); return -1; }
+	if (is_undefined(_challenge)) { show_message("[ERROR] gxc_challenge_get_global_scores, required query params 'challenge' not found (use 'options.challengeId' to provide one)."); return -1 }
 
 	// This is the query URL
-	var _url = "https://api.gxc.gg/gg/games/" + _game + "/challenges/" + _challenge + "/scores";
+	var _domain = __gxc_get_domain();
+	var _url = _domain + "/gg/games/" + _game + "/challenges/" + _challenge + "/scores";
 	_url += __gxc_struct_to_params(_options, ["page", "pageSize", "trackId"]);
 
 	return __gxc_http_request(_url, "GET", _listener, _callback);
@@ -207,9 +212,8 @@ function gxc_challenge_get_user_scores(_callback = undefined, _options = undefin
 	}
 	
 	// Validate input paramenters
-	if (!is_undefined(_callback) && !is_method(_callback)) {
-		throw "[ERROR] gxc_challenge_get_user_scores, param 'callback' must be of type method."
-	}
+	if (!is_undefined(_callback) && !is_method(_callback)) { show_message("[ERROR] gxc_challenge_get_user_scores, param 'callback' must be of type method."); return -1; }
+	
 	// Check if callback should be user instead of event
 	var _listener = !is_undefined(_callback) ? __gxc_callback_asyncListener : __gxc_event_asyncListener;
 
@@ -218,42 +222,90 @@ function gxc_challenge_get_user_scores(_callback = undefined, _options = undefin
 
 	// Get required query parameters.
 	var _game =  gxc_get_query_param("game");
-	var _trackId = _options.trackId;
+	var _track = _options.trackId;
 	var _challenge = _options.challengeId;
 	
 	// Make sure the required query params are all available
-	if (is_undefined(_game) || is_undefined(_trackId) || is_undefined(_challenge)) {
-		throw "[ERROR] gxc_challenge_get_user_scores, required query params not found."
-	}
+	if (is_undefined(_game)) { show_message("[ERROR] gxc_challenge_get_user_scores, required query params 'game' not found."); return -1; }
+	if (is_undefined(_track)) { show_message("[ERROR] gxc_challenge_get_user_scores, required query params 'track' not found (use 'options.trackId' to provide one)."); return -1; }
+	if (is_undefined(_challenge)) { show_message("[ERROR] gxc_challenge_get_user_scores, required query params 'challenge' not found (use 'options.challengeId' to provide one)."); return -1 }
 
 	// This is the query URL
-	var _url = "https://api.gxc.gg/gg/games/" + _game + "/challenges/" + _challenge + "/user-scores";
+	var _domain = __gxc_get_domain();
+	var _url = _domain + "/gg/games/" + _game + "/challenges/" + _challenge + "/user-scores";
 	_url += __gxc_struct_to_params(_options, ["page", "pageSize", "trackId"]);
 	
+	return __gxc_http_request(_url, "GET", _listener, _callback);
+}
+
+/// @function gxc_payment_get_status(callback, options)
+/// @description Queries details on whether the user bought the full version of the game
+/// @param {Function} callback The function to be called upon task completion.
+/// @param {Struct} options This struct can contain game (gameId, trackId) information.
+/// @returns {Real} The http request unique identifier.
+/// @notes By default this function checks the payment status of the current game
+///		however this behavior can be changed by providing a different gameId in the
+///		options struct.
+///
+function gxc_payment_get_status(_callback = undefined, _options = undefined) {
+	
+	static _defaultOptions = {
+		gameId: gxc_get_query_param("game"),
+		trackId: gxc_get_query_param("track"),
+	}
+	
+	// Validate input paramenters
+	if (!is_undefined(_callback) && !is_method(_callback)) { show_message("[ERROR] gxc_payment_get_status, param 'callback' must be of type method."); return -1; }
+	
+	// Check if callback should be user instead of event
+	var _listener = !is_undefined(_callback) ? __gxc_callback_asyncListener : __gxc_event_asyncListener;
+
+	// Build options struct from defaults
+	_options = __gxc_struct_from_default(_defaultOptions, _options);
+
+	// Get required query parameters
+	var _game = _options.gameId;
+	
+	// Make sure the required query params are all available
+	if (is_undefined(_game)) { show_message("[ERROR] gxc_payment_get_status, required query params 'game' not found (use 'options.gameId' to provide one)."); return -1 }
+
+	// This is the query URL
+	var _domain = __gxc_get_domain();
+	var _url = _domain + "/gg/games/" + _game + "/full-version";
+	_url += __gxc_struct_to_params(_options, ["trackId"]);
+
 	return __gxc_http_request(_url, "GET", _listener, _callback);
 }
 
 // ######################## CONSTANTS ########################
 
 // HTTP Status: 400
-#macro gxc_error_challenge_not_active "challenge not active"
-#macro gxc_error_challenge_not_published "challenge not published"
-#macro gxc_error_invalid_hash "invalid hash"
-#macro gxc_error_negative_score "negative score"
+#macro gxc_error_challenge_not_active "challenge_not_active"
+#macro gxc_error_challenge_not_published "challenge_not_published"
+#macro gxc_error_invalid_hash "invalid_hash"
+#macro gxc_error_negative_score "negative_score"
 
-#macro gxc_error_page_invalid "page invalid"
-#macro gxc_error_page_less_than_0 "page less than 0"
-#macro gxc_error_page_size_invalid "page size invalid"
-#macro gxc_error_page_size_less_than_1 "page size less than 1"
-#macro gxc_error_page_size_too_high "page size too high"
+#macro gxc_error_page_invalid "page_invalid"
+#macro gxc_error_page_less_than_0 "page_less_than_0"
+#macro gxc_error_page_size_invalid "page_size_invalid"
+#macro gxc_error_page_size_less_than_1 "page_size_less_than_1"
+#macro gxc_error_page_size_too_high "page_size_too_high"
+
+#macro gxc_error_game_full_version_already_bought	"game_full_version_already_bought"
+#macro gxc_error_game_full_version_disabled "game_full_version_disabled"	
+#macro gxc_error_game_full_version_not_allowed "game_full_version_not_allowed"
+
+#macro gxc_error_game_paid_not_allowed "game_paid_not_allowed"
+
+#macro gxc_error_payments_disabled "payments_disabled"
 
 // HTTP Status: 403
-#macro gxc_error_sign_in_required "sign in required"
+#macro gxc_error_sign_in_required "sign_in_required"
 
 // HTTP Status: 404
-#macro gxc_error_challenge_not_found "challenge not found"
-#macro gxc_error_game_not_found "game not found"
-#macro gxc_error_tack_not_found "track not found"
+#macro gxc_error_challenge_not_found "challenge_not_found"
+#macro gxc_error_game_not_found "game_not_found"
+#macro gxc_error_tack_not_found "tack_not_found"
 
 
 // ################### DEPRECATED METHODS ####################
@@ -280,6 +332,12 @@ function gxc_submit_challenge_score(_score, _callback = undefined) {
 }
 
 // ##################### PRIVATE METHODS #####################
+
+function __gxc_get_domain() {
+	
+	static domain = GXC_USE_SANDBOX_ENVIRONMENT ? "https://api.sandbox.gx.games" : "https://api.gx.games";
+	return domain;
+}
 
 function __gxc_struct_to_params(_struct, _names) {
 	

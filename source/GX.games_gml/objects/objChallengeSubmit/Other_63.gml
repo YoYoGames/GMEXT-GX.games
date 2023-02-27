@@ -21,6 +21,6 @@ gxc_challenge_submit_score(_value, function(_status, _result) {
 	
 	// _status: is the http response status code.
 	// _result: is the struct representation of the body.
-	// Consulte the manual for more details.
+	// Consult the manual for more details.
 	show_message(_result);
 });

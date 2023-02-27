@@ -35,7 +35,7 @@ onClick = function() {
 		
 		// _status: is the http response status code.
 		// _result: is the struct representation of the body.
-		// Consulte the manual for more details.
+		// Consult the manual for more details.
 		show_message(_result);
 	}, _options);
 }

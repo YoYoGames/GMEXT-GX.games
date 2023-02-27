@@ -3,14 +3,14 @@
 // Inherit the parent event
 event_inherited();
 
-text = "Query Profile";
+text = "Get Status";
 
 // Definition of onClick function that will be executed
 // when the button is clicked.
 onClick = function() {
 	
-	// We can now get the current profile information
-	gxc_profile_get_info(function(_status, _result) {
+	// With this function we can query the payment status for the current game.
+	gxc_payment_get_status(function(_status, _result) {
 		
 		// _status: is the http response status code.
 		// _result: is the struct representation of the body.
