@@ -133,7 +133,7 @@ function gxc_challenge_submit_score(_score, _callback = undefined, _options = un
 	// Get required query parameters.
 	var _game =  gxc_get_query_param("game");
 	var _challenge = _options.challengeId;
-	var _track = _options._trackId;
+	var _track = _options.trackId;
 	
 	// Make sure the required query params are all available
 	if (is_undefined(_game)) { show_message("[ERROR] gxc_challenge_submit_score, required query params 'game' not found."); return -1; }
